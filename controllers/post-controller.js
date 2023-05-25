@@ -13,7 +13,7 @@ module.exports.createNewPost = async function(req, res)
 
     let _id = req.user._id;
     let { title, content, category } = req.body;
-    content = content.replace(/\n/g, "<br>");
+    
     let newPost = new Post(
         {
             title, content, category,
@@ -99,11 +99,6 @@ module.exports.getPosts = async function(req, res)
                                     .sort( {lastUpdated: -1})
                                     .exec();
 
-        postsFound = postsFound.map((post) =>
-        {
-            postsFound.content = postsFound.content.replace(/<br\s*\/?>/g, '\n');
-        })
-
         return res.send(postsFound);            
     }
     catch (err)
@@ -139,7 +134,10 @@ module.exports.getPostsByUsername = async function(req, res)
     {
         let userFound = await User.findOne({username: _username}).exec();
         if(!userFound) return res.status(400).send("The username doesn't exist");
-        let postsFound = await Post.find({creator : userFound._id}).populate("creator", ["username", "_id"]);
+        let postsFound = await Post.find({creator : userFound._id})
+                                    .populate("creator", ["username", "_id"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
         if (!postsFound) return res.status(500).send("The username doesn't have any posts");
         return res.send(postsFound);
     }
