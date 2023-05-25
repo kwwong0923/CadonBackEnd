@@ -91,10 +91,15 @@ module.exports.editUsername = async function(req, res)
   {
     return res.status(400).send("You can't edit other user");
   }
-
   let { username } = req.body
   try
   {
+    let foundUsername = await User.findOne({ username }).exec();
+    if (foundUsername)
+    {
+      return res.status(400).send("The user is used");
+    }
+    
     let foundUser = await User.findOneAndUpdate({ _id }, { username }, {
       runValidators: true,
       new: true,

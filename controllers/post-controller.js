@@ -13,6 +13,7 @@ module.exports.createNewPost = async function(req, res)
 
     let _id = req.user._id;
     let { title, content, category } = req.body;
+    content = content.replace(/\n/g, "<br>");
     let newPost = new Post(
         {
             title, content, category,
@@ -22,7 +23,6 @@ module.exports.createNewPost = async function(req, res)
     )
     try 
     {
-        console.log("HERE");
         let savedPost = await newPost.save();
         let foundUser = await User.findOne({ _id }).exec();
         foundUser.ownedPost.push(savedPost._id);
@@ -41,19 +41,46 @@ module.exports.createNewPost = async function(req, res)
 // POST - Save Post
 module.exports.savePost = async function (req, res)
 {
-    console.log("save");
-    let _id = req.params;
+    let { _id }= req.params;
     let userId = req.user._id;
     try
     {
-        console.log("HERE");
         let foundUser = await User.findOne({ _id: userId}).exec();
-        let foundPost = await Post.findOne({ _id}).exec();
-        // console.log(foundPost);
-        foundUser.savedPost.push(_id);
-        console.log(foundUser.savedPost);
-        await foundUser.save();
-        return res.send("The post saved to your favorite list")
+        if (!foundUser.savedPost.includes(_id))
+        {
+            foundUser.savedPost.push(_id); 
+            await foundUser.save();
+            return res.send("The post saved to your favorite list")
+        }
+        else
+        {
+            return res.send("You have saved this post before")
+        }        
+    }
+    catch (err)
+    {
+        return res.status(500).send(err);
+    }
+}
+
+// POST - Us-save the saved post
+module.exports.unsavedPost = async function(req, res)
+{
+    let { _id } = req.params;
+    let userId = req.user._id;
+    try
+    {
+        let foundUser = await User.findOne({ _id: userId }).exec();
+        if (foundUser.savedPost.includes(_id))
+        {
+            foundUser.savedPost = foundUser.savedPost.filter((element) => element._id != _id);
+            await foundUser.save();
+            return res.send("The post is removed from your saved list");
+        }
+        else
+        {
+            return res.send("You haven't saved this post before")
+        }
     }
     catch (err)
     {
@@ -66,11 +93,36 @@ module.exports.getPosts = async function(req, res)
 {
     try
     {
-        console.log("GET - Get all the posts");
         let postsFound = await Post.find({})
                                     .populate("creator", ["username"])
                                     .populate("reply.userId", ["username"])
                                     .sort( {lastUpdated: -1})
+                                    .exec();
+
+        postsFound = postsFound.map((post) =>
+        {
+            postsFound.content = postsFound.content.replace(/<br\s*\/?>/g, '\n');
+        })
+
+        return res.send(postsFound);            
+    }
+    catch (err)
+    {
+        return res.status(500).send(err);
+    }
+}
+
+// GET - Get the hot posts
+module.exports.getHotPosts = async function(req, res)
+{
+    try
+    {
+        const threeDays = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+        let postsFound = await Post.find({ lastUpdated: { $gte: threeDays}})
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .sort({ "reply.length": -1})
+                                    .limit(10)
                                     .exec();
         return res.send(postsFound);        
     }
@@ -79,7 +131,6 @@ module.exports.getPosts = async function(req, res)
         return res.status(500).send(err);
     }
 }
-
 // Get - Get posts by User Name
 module.exports.getPostsByUsername = async function(req, res)
 {
@@ -98,16 +149,20 @@ module.exports.getPostsByUsername = async function(req, res)
     }
 }
 
-// Get - Get posts by User id (not _id)
+// Get - Get posts by User id
 module.exports.getPostsByUserId = async function(req, res)
 {
-    let { id } = req.params;
+    let userId = req.user._id;
+    console.log(req.user);
     try
     {
-        let userFound = await User.findOne({id}).exec();
+        let userFound = await User.findOne({ _id: userId }).exec();
         if (!userFound) return res.status(400).send("The username id doesn't exist");
 
-        let postsFound = await Post.find({creator : userFound._id}).populate("creator", ["username", "_id"]);
+        let postsFound = await Post.find({creator : userFound._id})
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
         return res.send(postsFound);
     }
     catch (err)
@@ -122,7 +177,10 @@ module.exports.getPostsByPostId = async function(req, res)
     let { _id } = req.params;
     try
     {
-        let postFound = await Post.findOne({ _id }).exec();
+        let postFound = await Post.findOne({ _id })
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
         return res.send(postFound);
     }
     catch (err)
@@ -170,25 +228,53 @@ module.exports.getPostsByKeyword = async function(req, res)
     }
 }
 
+// Get - Get posts from saved section
+module.exports.getPostsFromSaved = async function(req, res)
+{
+    let userId = req.user._id;
+    let savedPost = [];
+    try
+    {
+        let userFound = await User.findOne({ _id: userId}).exec();
+        let idList = userFound.savedPost;
+        for (let i = 0; i < idList.length; i ++)
+        {
+            let _id = idList[i];
+            let postFound = await Post.findOne({ _id })
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
+            savedPost.push(postFound);                   
+        }
+        savedPost.sort((a, b) => b.lastUpdated - a.lastUpdated);
+        res.send(savedPost);
+    }
+    catch (err)
+    {
+        return res.status(500).send(err);
+    }
+}
+
 // POST - Like the post
 module.exports.likeThePost = async function(req, res)
 {
     let { _id } = req.params;
     let userId = req.user._id;
-
     try
     {
-        let postFound = await Post.findOne({ _id }).exec();
+        let postFound = await Post.findOne({ _id })
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
         if (!postFound.likeOrDislikeBefore(userId, true))
         {
-            console.log("If");
             if (postFound.likeOrDislikeBefore(userId, false))
             {
                 postFound.dislike = postFound.dislike.filter(element => element != userId);
             }
             postFound.like.push(userId);
             await postFound.save();
-            return res.send("You likes the post");
+            return res.send(postFound);
         }
         else
         {
@@ -204,11 +290,16 @@ module.exports.likeThePost = async function(req, res)
 // POST - Dislike the post
 module.exports.dislikeThePost = async function(req, res)
 {
+    console.log("dislikeThePost");
     let { _id } = req.params;
     let userId = req.user._id;
     try
     {
-        let postFound = await Post.findOne({ _id }).exec();
+        let postFound = await Post.findOne({ _id })
+                                    .populate("creator", ["username"])
+                                    .populate("reply.userId", ["username"])
+                                    .exec();
+
         if (!postFound.likeOrDislikeBefore(userId, false))
         {
             if (postFound.likeOrDislikeBefore(userId, true))
@@ -219,7 +310,7 @@ module.exports.dislikeThePost = async function(req, res)
 
             postFound.dislike.push(userId);
             await postFound.save();
-            return res.send("You dislikes the post");
+            return res.send(postFound);
         }
         else
         {
@@ -242,11 +333,18 @@ module.exports.replyPost = async function(req, res)
     let newReply = new Reply({ userId, content});
     try
     {
-        let post = await Post.findOne({ _id: _postId}).exec();
+        let post = await Post.findOne({ _id: _postId})
+                                .populate("creator", ["username"])
+                                .populate("reply.userId", ["username"])
+                                .exec();
         post.reply.push(newReply);
         post.lastUpdated = new Date();
         await post.save();
-        return res.send("The user replies to the post successfully");
+        post = await Post.findOne({ _id: _postId})
+                            .populate("creator", ["username"])
+                            .populate("reply.userId", ["username"])
+                            .exec();
+        return res.send(post);
     }
     catch (err)
     {

@@ -18,7 +18,7 @@ const postSchema = new Schema({
         category:
         {
             type: String,
-            enum: ["Travel", "Food", "Game", "News", "Sport", "Music"]
+            enum: ["Travel", "Food", "Game", "News", "Sport", "Music", "Other"]
         },
         creator:
         {

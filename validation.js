@@ -29,7 +29,7 @@ const postValidation = (data) =>
         {
             title: Joi.string().min(3).max(30).required(),
             content: Joi.string().required(),
-            category: Joi.string().required().valid("Travel", "Food", "Game", "News", "Sport", "Music")
+            category: Joi.string().required().valid("Travel", "Food", "Game", "News", "Sport", "Music", "Other")
         }
     )
     return schema.validate(data);
