@@ -4,7 +4,7 @@ dotenv.config();
 const express = require("express");
 const app = express();
 const mongoose = require("./config/mongoose");
-// const cors = require("cors");
+const cors = require("cors");
 const passport = require("passport");
 require("./config/passport")(passport);
 
@@ -19,7 +19,7 @@ const db = mongoose();
 // Post require
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-// app.use(cors());
+app.use(cors());
 
 // Routing
 app.use("/api/user", userRouter);
