@@ -31,7 +31,7 @@ app.use("/api/edit", passport.authenticate("jwt", { session: false}), editRouter
 
 
 // PORT
-PORT = process.env.HOST || 8080;
+PORT = process.env.PORT || 8080;
 
 // Listen
 app.listen(PORT, () =>
