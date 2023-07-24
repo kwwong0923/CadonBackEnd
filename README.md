@@ -1,10 +1,26 @@
 # CadonBackEnd
 ## Description
-Cadon is an online forum that offers a user-friendly platform. 
-Users can :
-1. register an account
-2. log in an account
-3. create posts
-4. reply to other posts
+Cadon is an online forum which is built by mern-stack. It provides a platform for user to share their thought and opinion.
 
-All the the posts are categorized into different groups, allowing for easy navigation.
+## Functional
+User can operates these features of the website:
+1. Registration of user account
+2. Logging in of user account
+3. Editing of user account
+4. Post Creation
+5. Replying a post
+6. Review their own post
+7. Favorite post storing
+
+## Getting Started
+1. Brosering Website
+* Web browser
+* [**link**] (https://cadon.herokuapp.com/)
+
+2. Running the back-end locally
+* Download the folder
+* Run command on the folder dictoray
+"""
+node app.js
+"""
+* You can 
