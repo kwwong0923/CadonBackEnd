@@ -15,7 +15,7 @@ User can operates these features of the website:
 ## Getting Started
 1. Brosering Website
 * Web browser
-* [link] (https://cadon.herokuapp.com/)
+* [link](https://cadon.herokuapp.com/)
 
 2. Running the back-end locally
 * Download the folder
