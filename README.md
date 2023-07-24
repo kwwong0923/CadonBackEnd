@@ -20,6 +20,8 @@ User can operates these features of the website:
 2. Running the back-end locally
 * Download the folder
 * Run command on the folder dictoray
+* Replace the process.env.DB_URL by your own link in config\mongoose.js to connect your own MongoDB database
+  You can set up your own database on [MongoDB Altas](https://www.mongodb.com/atlas/database) easily
 ```
 node server.js
 ```
