@@ -21,7 +21,7 @@ User can operates these features of the website:
 * Download the folder
 * Run command on the folder dictoray
 ```
-node app.js
+node server.js
 ```
 
 
