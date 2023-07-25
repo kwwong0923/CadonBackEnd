@@ -12,6 +12,10 @@ User can operates these features of the website:
 6. Review their own post
 7. Favorite post storing
 
+
+## Built With
+Node.js | Express.js | Passport.js | MongoDB | Mongoose
+
 ## Getting Started
 1. Brosering Website
 * Web browser
