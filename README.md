@@ -29,7 +29,7 @@ You can set up your own database on [MongoDB Altas](https://www.mongodb.com/atla
 ```
 node server.js
 ```
-* Explore it by using postman or [Front-End React](https://github.com/kwwong0923/CadonFrontEnd)
+* Explore it by using Postman or [Front-End React](https://github.com/kwwong0923/CadonFrontEnd)
 
 ## Contact Me
 Feel free to contact me, if you are interest to chat with me
